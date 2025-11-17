@@ -130,7 +130,7 @@ function formatMm(value) {
   return (v % 1 === 0) ? v.toFixed(0) : v.toFixed(1);
 }
 
-function drawSheetWithLayout(params, layout, best, columnIndex, columnsTotal) {
+function drawSheetWithLayout(params, layout, best, rowIndex, rowsTotal = 2) {
   const { sheetL, sheetW, gap, margins } = params;
   const { cardL, cardW, countX, countY, total } = layout;
 
@@ -138,42 +138,50 @@ function drawSheetWithLayout(params, layout, best, columnIndex, columnsTotal) {
   const dprW = canvas.width / dpr;
   const dprH = canvas.height / dpr;
 
-  const outerPad = 20;
-  const columnGap = 20;
-  const availableWidth = dprW - 2 * outerPad - (columnsTotal - 1) * columnGap;
-  const columnWidth = availableWidth / columnsTotal;
-  const availableHeight = dprH - 2 * outerPad;
+  const outerPad = 20;          // отступы по краям
+  const rowGap = 40;            // расстояние между раскладками по вертикали
 
+  // Высота ряда
+  const rowHeight = (dprH - 2 * outerPad - rowGap) / rowsTotal;
+
+  // Масштабирование — учитываем ширину и высоту ряда
   const scale = Math.min(
-    columnWidth / sheetL,
-    availableHeight / sheetW
+    (dprW - 2 * outerPad) / sheetL,
+    rowHeight / sheetW
   );
 
-  const colLeft = outerPad + columnIndex * (columnWidth + columnGap);
-  const sheetPixelWidth = sheetL * scale;
+  const sheetPixelWidth  = sheetL * scale;
   const sheetPixelHeight = sheetW * scale;
 
-  const offsetX = colLeft + (columnWidth - sheetPixelWidth) / 2;
-  const offsetY = outerPad + (availableHeight - sheetPixelHeight) / 2;
+  // Центровка по X
+  const offsetX = outerPad + (dprW - 2 * outerPad - sheetPixelWidth) / 2;
 
+  // Расположение по вертикали (верхний или нижний ряд)
+  const offsetY = outerPad
+                + rowIndex * (rowHeight + rowGap)
+                + (rowHeight - sheetPixelHeight) / 2;
+
+  // Преобразования координат (мм → px)
   function toPxX(mm) { return offsetX + mm * scale; }
   function toPxY(mm) { return offsetY + mm * scale; }
 
-  // Лист
+  // === Рисуем лист ===
   ctx.fillStyle = '#ffffff';
   ctx.strokeStyle = best ? '#0055cc' : '#444';
   ctx.lineWidth = best ? 2 : 1.5;
+
   ctx.beginPath();
   ctx.rect(toPxX(0), toPxY(0), sheetL * scale, sheetW * scale);
   ctx.fill();
   ctx.stroke();
 
-  // Печатная область
+  // === Расчёт печатной области ===
   const printAreaX = margins.left;
   const printAreaY = margins.top;
   const printAreaW = Math.max(0, sheetL - margins.left - margins.right);
   const printAreaH = Math.max(0, sheetW - margins.top - margins.bottom);
 
+  // Заливка печатной области
   if (printAreaW > 0 && printAreaH > 0) {
     ctx.fillStyle = '#f5faff';
     ctx.beginPath();
@@ -183,6 +191,7 @@ function drawSheetWithLayout(params, layout, best, columnIndex, columnsTotal) {
 
   let distLeft = 0, distRight = 0, distTop = 0, distBottom = 0;
 
+  // === Рисуем листовки ===
   if (countX > 0 && countY > 0) {
     const widthUsed  = countX * cardL + (countX - 1) * gap;
     const heightUsed = countY * cardW + (countY - 1) * gap;
@@ -209,6 +218,7 @@ function drawSheetWithLayout(params, layout, best, columnIndex, columnsTotal) {
       for (let ix = 0; ix < countX; ix++) {
         const x = leafletsStartX + ix * (cardL + gap);
         const y = leafletsStartY + iy * (cardW + gap);
+
         ctx.beginPath();
         ctx.rect(toPxX(x), toPxY(y), cardL * scale, cardW * scale);
         ctx.fill();
@@ -216,15 +226,16 @@ function drawSheetWithLayout(params, layout, best, columnIndex, columnsTotal) {
       }
     }
 
-    // Подписи свободных полей слева/справа (1/4 от верха / 1/4 от низа)
+    // === Подписи свободных полей ===
     ctx.fillStyle = '#000';
     ctx.font = '11px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
+    // Слёвa и справа — по принципу 1/4 и 3/4 высоты листа
     const yTopQuarter    = offsetY + sheetPixelHeight * 0.25;
     const yBottomQuarter = offsetY + sheetPixelHeight * 0.75;
-    const ySides = (columnIndex === 0) ? yTopQuarter : yBottomQuarter;
+    const ySides = (rowIndex === 0) ? yTopQuarter : yBottomQuarter;
 
     if (distLeft >= 0.01) {
       const xL = toPxX(leafletsStartX / 2);
@@ -236,10 +247,8 @@ function drawSheetWithLayout(params, layout, best, columnIndex, columnsTotal) {
       ctx.fillText(`${formatMm(distRight)} мм`, xR, ySides);
     }
 
-    // Верх/низ (разнесены по горизонтали)
-    const xCenterBase = offsetX + sheetPixelWidth / 2;
-    const xOffset = (columnIndex === 0 ? -15 : 15);
-    const xCenter = xCenterBase + xOffset;
+    // Верх и низ — смещаем по X, чтобы не налезало
+    const xCenter = offsetX + sheetPixelWidth / 2 + (rowIndex === 0 ? -20 : 20);
 
     if (distTop >= 0.01) {
       const yT = toPxY(leafletsStartY / 2);
@@ -257,18 +266,21 @@ function drawSheetWithLayout(params, layout, best, columnIndex, columnsTotal) {
     ctx.fillText('Не помещается', offsetX + 10, offsetY + 20);
   }
 
-  // Рамка печатной области
+  // === Контур печатной области ===
   if (printAreaW > 0 && printAreaH > 0) {
     ctx.strokeStyle = '#999';
     ctx.setLineDash([4, 3]);
     ctx.lineWidth = 1;
+
     ctx.beginPath();
     ctx.rect(toPxX(printAreaX), toPxY(printAreaY), printAreaW * scale, printAreaH * scale);
     ctx.stroke();
     ctx.setLineDash([]);
   }
 
-  // длина листа (горизонтально)
+  // === Подписи размеров листа ===
+
+  // длина листа
   ctx.fillStyle = '#333';
   ctx.font = '12px Arial';
   ctx.textAlign = 'center';
@@ -279,7 +291,7 @@ function drawSheetWithLayout(params, layout, best, columnIndex, columnsTotal) {
     offsetY + sheetPixelHeight + 4
   );
 
-  // ширина листа (вертикально, 90°)
+  // ширина (повёрнутая надпись)
   const labelW = `${sheetW} мм`;
   const textX = offsetX + sheetPixelWidth + 10;
   const textY = offsetY + sheetPixelHeight / 2;
@@ -292,21 +304,22 @@ function drawSheetWithLayout(params, layout, best, columnIndex, columnsTotal) {
   ctx.fillText(labelW, 0, 0);
   ctx.restore();
 
-  // заголовок варианта
+  // === Заголовок варианта ===
   ctx.fillStyle = best ? '#0055cc' : '#555';
   ctx.font = '12px Arial';
   ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
+  ctx.textBaseline = 'bottom';
 
-  let label = layout.name;
-  if (best) label = 'Оптимальный — ' + label;
+  let title = layout.name;
+  if (best) title = 'Оптимальный — ' + title;
 
   ctx.fillText(
-    `${label} (${total} шт)`,
+    `${title} (${total} шт)`,
     offsetX + sheetPixelWidth / 2,
-    offsetY - 16
+    offsetY - 6
   );
 }
+
 
 function drawLayout(params, layouts) {
   const { sheetL, sheetW, gap, margins } = params;
@@ -334,8 +347,8 @@ function drawLayout(params, layouts) {
     return;
   }
 
-  drawSheetWithLayout(params, normal,  bestKey === 'normal',  0, 2);
-  drawSheetWithLayout(params, rotated, bestKey === 'rotated', 1, 2);
+  drawSheetWithLayout(params, normal,  bestKey === 'normal',  0, 1);
+  drawSheetWithLayout(params, rotated, bestKey === 'rotated', 1, 1);  
 
   const statsEl = document.getElementById('stats');
   const summaryEl = document.getElementById('summary-label');
