@@ -7,14 +7,11 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
 <div class="wrapper" id="app-root">
   <div class="panel controls">
     <h1>Раскладка листовок</h1>
     <p>Все размеры в миллиметрах. Раскладка пересчитывается автоматически при изменении параметров.</p>
-
     <h2>Параметры листа</h2>
-
     <div class="field-row">
       <div class="field">
         <label for="sheet-format">Формат листа</label>
@@ -35,7 +32,6 @@
         </select>
       </div>
     </div>
-
     <div class="field-row">
       <div class="field">
         <label for="sheet-length">Длина листа</label>
@@ -46,7 +42,6 @@
         <input type="number" id="sheet-width" value="320">
       </div>
     </div>
-
     <h2>Параметры листовки</h2>
     <div class="field-row">
       <div class="field">
@@ -58,7 +53,6 @@
         <input type="number" id="card-width" value="50">
       </div>
     </div>
-
     <h2>Расстав и техполя</h2>
     <div class="field-row">
       <div class="field">
@@ -66,7 +60,6 @@
         <input type="number" id="gap" value="3" min="0">
       </div>
     </div>
-
     <div class="field-row">
       <div class="field">
         <label for="margin-top">Техполе сверху</label>
@@ -87,12 +80,10 @@
         <input type="number" id="margin-right" value="6" min="0">
       </div>
     </div>
-
     <div class="btn-row">
       <button class="btn-main" id="btn-save">Сохранить в PNG</button>
     </div>
   </div>
-
   <div class="panel canvas-container">
     <div class="canvas-header">
       <span>Визуализация раскладки</span>
@@ -102,11 +93,7 @@
     <div class="stats" id="stats"></div>
   </div>
 </div>
-
-<!-- html2canvas для сохранения PNG -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<!-- наш скрипт -->
 <script src="app.js"></script>
-
 </body>
 </html>
