@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Раскладка листовок на листе</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="wrapper" id="app-root">
+  <div class="panel controls">
+    <h1>Раскладка листовок</h1>
+    <p>Все размеры в миллиметрах. Раскладка пересчитывается автоматически при изменении параметров.</p>
+
+    <h2>Параметры листа</h2>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="sheet-format">Формат листа</label>
+        <select id="sheet-format">
+          <option value="custom">Свой размер</option>
+          <option value="SRA3">SRA3 (450×320)</option>
+          <option value="325x470">325×470</option>
+          <option value="330x488">330×488</option>
+          <option value="350x500">35×50 (500×350)</option>
+          <option value="470x620">47×62 (620×470)</option>
+          <option value="470x650">47×65 (650×470)</option>
+          <option value="500x700">50×70 (700×500)</option>
+          <option value="520x720">52×72 (720×520)</option>
+          <option value="640x900">64×90 (900×640)</option>
+          <option value="620x940">62×94 (940×620)</option>
+          <option value="700x1000">70×100 (1000×700)</option>
+          <option value="720x1040">72×104 (1040×720)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="sheet-length">Длина листа</label>
+        <input type="number" id="sheet-length" value="450">
+      </div>
+      <div class="field">
+        <label for="sheet-width">Ширина листа</label>
+        <input type="number" id="sheet-width" value="320">
+      </div>
+    </div>
+
+    <h2>Параметры листовки</h2>
+    <div class="field-row">
+      <div class="field">
+        <label for="card-length">Длина листовки</label>
+        <input type="number" id="card-length" value="100">
+      </div>
+      <div class="field">
+        <label for="card-width">Ширина листовки</label>
+        <input type="number" id="card-width" value="50">
+      </div>
+    </div>
+
+    <h2>Расстав и техполя</h2>
+    <div class="field-row">
+      <div class="field">
+        <label for="gap">Расстав (между листовками)</label>
+        <input type="number" id="gap" value="3" min="0">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="margin-top">Техполе сверху</label>
+        <input type="number" id="margin-top" value="6" min="0">
+      </div>
+      <div class="field">
+        <label for="margin-bottom">Техполе снизу</label>
+        <input type="number" id="margin-bottom" value="6" min="0">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="margin-left">Техполе слева</label>
+        <input type="number" id="margin-left" value="6" min="0">
+      </div>
+      <div class="field">
+        <label for="margin-right">Техполе справа</label>
+        <input type="number" id="margin-right" value="6" min="0">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-main" id="btn-save">Сохранить в PNG</button>
+    </div>
+  </div>
+
+  <div class="panel canvas-container">
+    <div class="canvas-header">
+      <span>Визуализация раскладки</span>
+      <span id="summary-label" style="font-size:12px;"></span>
+    </div>
+    <canvas id="layout-canvas"></canvas>
+    <div class="stats" id="stats"></div>
+  </div>
+</div>
+
+<!-- html2canvas для сохранения PNG -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<!-- наш скрипт -->
+<script src="app.js"></script>
+
+</body>
+</html>
