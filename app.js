@@ -130,6 +130,7 @@ function formatMm(value) {
   return (v % 1 === 0) ? v.toFixed(0) : v.toFixed(1);
 }
 
+// 🔽 НОВАЯ ВЕРСИЯ: два варианта сверху и снизу
 function drawSheetWithLayout(params, layout, best, rowIndex, rowsTotal = 2) {
   const { sheetL, sheetW, gap, margins } = params;
   const { cardL, cardW, countX, countY, total } = layout;
@@ -141,10 +142,10 @@ function drawSheetWithLayout(params, layout, best, rowIndex, rowsTotal = 2) {
   const outerPad = 20;          // отступы по краям
   const rowGap = 40;            // расстояние между раскладками по вертикали
 
-  // Высота ряда
+  // Высота строки (под один вариант)
   const rowHeight = (dprH - 2 * outerPad - rowGap) / rowsTotal;
 
-  // Масштабирование — учитываем ширину и высоту ряда
+  // Масштаб — подгоняем по ширине и высоте строки
   const scale = Math.min(
     (dprW - 2 * outerPad) / sheetL,
     rowHeight / sheetW
@@ -156,7 +157,7 @@ function drawSheetWithLayout(params, layout, best, rowIndex, rowsTotal = 2) {
   // Центровка по X
   const offsetX = outerPad + (dprW - 2 * outerPad - sheetPixelWidth) / 2;
 
-  // Расположение по вертикали (верхний или нижний ряд)
+  // Позиция по Y (верхняя или нижняя строка)
   const offsetY = outerPad
                 + rowIndex * (rowHeight + rowGap)
                 + (rowHeight - sheetPixelHeight) / 2;
@@ -165,7 +166,7 @@ function drawSheetWithLayout(params, layout, best, rowIndex, rowsTotal = 2) {
   function toPxX(mm) { return offsetX + mm * scale; }
   function toPxY(mm) { return offsetY + mm * scale; }
 
-  // === Рисуем лист ===
+  // === Лист ===
   ctx.fillStyle = '#ffffff';
   ctx.strokeStyle = best ? '#0055cc' : '#444';
   ctx.lineWidth = best ? 2 : 1.5;
@@ -175,13 +176,12 @@ function drawSheetWithLayout(params, layout, best, rowIndex, rowsTotal = 2) {
   ctx.fill();
   ctx.stroke();
 
-  // === Расчёт печатной области ===
+  // === Печатная область ===
   const printAreaX = margins.left;
   const printAreaY = margins.top;
   const printAreaW = Math.max(0, sheetL - margins.left - margins.right);
   const printAreaH = Math.max(0, sheetW - margins.top - margins.bottom);
 
-  // Заливка печатной области
   if (printAreaW > 0 && printAreaH > 0) {
     ctx.fillStyle = '#f5faff';
     ctx.beginPath();
@@ -191,7 +191,7 @@ function drawSheetWithLayout(params, layout, best, rowIndex, rowsTotal = 2) {
 
   let distLeft = 0, distRight = 0, distTop = 0, distBottom = 0;
 
-  // === Рисуем листовки ===
+  // === Листовки ===
   if (countX > 0 && countY > 0) {
     const widthUsed  = countX * cardL + (countX - 1) * gap;
     const heightUsed = countY * cardW + (countY - 1) * gap;
@@ -232,9 +232,12 @@ function drawSheetWithLayout(params, layout, best, rowIndex, rowsTotal = 2) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Слёвa и справа — по принципу 1/4 и 3/4 высоты листа
-    const yTopQuarter    = offsetY + sheetPixelHeight * 0.25;
-    const yBottomQuarter = offsetY + sheetPixelHeight * 0.75;
+    // слева/справа — на 1/4 или 3/4 высоты листа
+    const sheetYTop    = offsetY;
+    const sheetYBottom = offsetY + sheetPixelHeight;
+
+    const yTopQuarter    = sheetYTop    + sheetPixelHeight * 0.25;
+    const yBottomQuarter = sheetYTop    + sheetPixelHeight * 0.75;
     const ySides = (rowIndex === 0) ? yTopQuarter : yBottomQuarter;
 
     if (distLeft >= 0.01) {
@@ -247,7 +250,7 @@ function drawSheetWithLayout(params, layout, best, rowIndex, rowsTotal = 2) {
       ctx.fillText(`${formatMm(distRight)} мм`, xR, ySides);
     }
 
-    // Верх и низ — смещаем по X, чтобы не налезало
+    // верх/низ — немного разнесём по X, чтобы не мешать подписи длины
     const xCenter = offsetX + sheetPixelWidth / 2 + (rowIndex === 0 ? -20 : 20);
 
     if (distTop >= 0.01) {
@@ -280,7 +283,7 @@ function drawSheetWithLayout(params, layout, best, rowIndex, rowsTotal = 2) {
 
   // === Подписи размеров листа ===
 
-  // длина листа
+  // длина (горизонтально)
   ctx.fillStyle = '#333';
   ctx.font = '12px Arial';
   ctx.textAlign = 'center';
@@ -291,7 +294,7 @@ function drawSheetWithLayout(params, layout, best, rowIndex, rowsTotal = 2) {
     offsetY + sheetPixelHeight + 4
   );
 
-  // ширина (повёрнутая надпись)
+  // ширина (вертикально, 90°)
   const labelW = `${sheetW} мм`;
   const textX = offsetX + sheetPixelWidth + 10;
   const textY = offsetY + sheetPixelHeight / 2;
@@ -320,7 +323,6 @@ function drawSheetWithLayout(params, layout, best, rowIndex, rowsTotal = 2) {
   );
 }
 
-
 function drawLayout(params, layouts) {
   const { sheetL, sheetW, gap, margins } = params;
   const { normal, rotated, bestKey } = layouts;
@@ -347,8 +349,9 @@ function drawLayout(params, layouts) {
     return;
   }
 
-  drawSheetWithLayout(params, normal,  bestKey === 'normal',  0, 1);
-  drawSheetWithLayout(params, rotated, bestKey === 'rotated', 1, 1);  
+  // 🔽 ВАЖНО: теперь рисуем «по строкам», сверху и снизу
+  drawSheetWithLayout(params, normal,  bestKey === 'normal',  0, 2);
+  drawSheetWithLayout(params, rotated, bestKey === 'rotated', 1, 2);
 
   const statsEl = document.getElementById('stats');
   const summaryEl = document.getElementById('summary-label');
