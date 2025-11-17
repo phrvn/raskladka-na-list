@@ -130,7 +130,7 @@ function formatMm(value) {
   return (v % 1 === 0) ? v.toFixed(0) : v.toFixed(1);
 }
 
-// Рисуем один вариант раскладки в заданной позиции
+// Один вариант раскладки в заданной позиции
 function drawSheetWithLayout(params, layout, best, isFirstVariant, offsetX, offsetY, scale) {
   const { sheetL, sheetW, gap, margins } = params;
   const { cardL, cardW, countX, countY, total } = layout;
